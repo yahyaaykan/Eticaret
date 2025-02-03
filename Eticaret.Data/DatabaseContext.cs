@@ -1,11 +1,19 @@
 ﻿using Eticaret.Core.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System.Reflection;
 
 namespace Eticaret.Data
 {
     public class DatabaseContext : DbContext
     {
+        private readonly IConfiguration _configuration;
+
+        public DatabaseContext(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         public DbSet<AppUser> AppUsers { get; set; }
         public DbSet<Brand> Brands { get; set; }
         public DbSet<Category> Categorys { get; set; }
@@ -16,23 +24,16 @@ namespace Eticaret.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(@"Server=YAHYADESKTOP-S0\SQLYAHYA;Database=EticaretDb;Integrated Security=True;TrustServerCertificate=True;");
-            base.OnConfiguring(optionsBuilder);
+            if (!optionsBuilder.IsConfigured)
+            {
+                var connectionString = _configuration.GetConnectionString("DefaultConnection");
+                optionsBuilder.UseSqlServer(connectionString);
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //modelBuilder.ApplyConfiguration(new AppUserConfiguration());
-            //modelBuilder.ApplyConfiguration(new BrandConfiguration());
-            //modelBuilder.ApplyConfiguration(new CategoryConfiguration());
-            //modelBuilder.ApplyConfiguration(new ContactConfiguration());
-            //modelBuilder.ApplyConfiguration(new NewsConfiguration());
-            //modelBuilder.ApplyConfiguration(new ProductConfiguration());
-            //modelBuilder.ApplyConfiguration(new SliderConfiguration());
-            //assembly komutu ıle assagıda kllandıgımızda bunları tek tek yazmamıza gerek kalmıyor gıdıp classları bulup eklıyor
-            modelBuilder.ApplyConfigurationsFromAssembly
-                (Assembly.GetExecutingAssembly());
-
+            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
             base.OnModelCreating(modelBuilder);
         }
     }
